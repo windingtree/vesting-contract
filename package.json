@@ -1,0 +1,28 @@
+{
+  "name": "vesting-contract",
+  "version": "1.0.0",
+  "description": "Token vesting contract",
+  "main": "index.js",
+  "scripts": {
+    "test": "scripts/test.sh",
+    "testnet": "scripts/run-testnet.sh",
+    "lint": "eslint test",
+    "deploy-local": "./node_modules/.bin/truffle migrate",
+    "deploy-mainnet": "./node_modules/.bin/truffle migrate --network mainnet --reset",
+    "deploy-ropsten": "./node_modules/.bin/truffle migrate --network ropsten --reset",
+    "contract-flattener": "node_modules/.bin/truffle-flattener contracts/BookingPoC.sol > build/BookingPocFlattened.sol"
+  },
+  "author": "Augusto Lemble <augusto@windingtree.com>",
+  "license": "ISC",
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "openzeppelin-solidity": "^1.12.0",
+    "truffle-flattener": "^1.2.6",
+    "truffle-hdwallet-provider": "0.0.6",
+    "web3": "^1.0.0-beta.35"
+  },
+  "devDependencies": {
+    "ganache-cli": "^6.1.8",
+    "truffle": "^4.1.14"
+  }
+}
