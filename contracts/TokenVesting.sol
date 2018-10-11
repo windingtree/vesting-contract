@@ -20,6 +20,13 @@ contract TokenVesting is Ownable {
   event TokensClaimed(uint256 tokensClaimed);
   event VestingKilled();
 
+   /**
+   *@dev contract contructor
+   *@param _token address of erc20 token
+   *@param _receiver address entitle to claim tokens
+   *@param _startTime moment when counting time starts
+   *@param _cliff delay from _startTime after which vesting starts
+   */
   constructor(
     address _token,
     address _receiver,
@@ -37,11 +44,18 @@ contract TokenVesting is Ownable {
     timePerPeriod = _timePerPeriod;
   }
   
+   /**
+   *@dev grapper for gurrent time to make contract testable
+   */
   function getNow() public view returns(uint256){
 	return now;
   }
 
-  function fundVesting(uint256 _totalTokens) public onlyOwner {
+   /**
+   *@dev function responsible for supplying tokens that will be vested 
+   *@param _totalTokens amount of tokens that will be supplied to this contract
+   */
+  function fundVesting(uint256 _totalTokens) public onlyOwner { // I believe this logic should be part of constructor, that would simplify other functions as well
     require(totalTokens == 0, "Vesting already funded");
     require(_totalTokens > 0); //this is redundand because of next line , if allowence is 0 then it is still ok since nothing happens
     require(token.allowance(owner, address(this)) == _totalTokens); //this should be require(token.allowance(owner, address(this)) >= _totalTokens);
@@ -50,6 +64,9 @@ contract TokenVesting is Ownable {
     emit VestingFunded(_totalTokens);
   }
 
+   /**
+   *@dev function that allows receiver to claim tokens
+   */
   function claimTokens() public {
     require(totalTokens > 0, "Vesting has not been funded yet");
     require(msg.sender == receiver, "Only receiver can claim tokens");
@@ -68,6 +85,9 @@ contract TokenVesting is Ownable {
 	
   }
 
+   /**
+   *@dev function that allows cancel vesting
+   */
   function killVesting() public onlyOwner {
     token.transfer(owner, totalTokens.sub(tokensClaimed));
     tokensClaimed = totalTokens;

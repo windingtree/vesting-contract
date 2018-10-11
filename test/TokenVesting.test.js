@@ -84,6 +84,34 @@ contract('TokenVesting', function (accounts) {
 			});
 		});
 			
+		contract('killVesting', function () {
+			
+			it('kill vesting will succeed if performed by owner', async function () {
+				await data.tokenVesting.killVesting({from:accounts[0]});//.should.be.rejectedWith(EVMRevert);
+			});
+			
+			it('kill vesting will fail if performed by not owner', async function () {
+				await data.tokenVesting.killVesting({from:accounts[1]}).should.be.rejectedWith(EVMRevert);
+			});
+			
+			it('kill vesting if succeed will emit Transfer event with proper sender recipient and value', async function () {
+				var retValData =  await data.tokenVesting.killVesting({from:accounts[0]});
+				var balanceAfter = await data.token.balanceOf(data.tokenVesting.address);
+				return new Promise(function(res,rej){
+					data.token.contract.Transfer({fromBlock:retValData.receipt.blockNumber-1},function(err,result){
+						if(err!=null){
+							rej(err);
+						}
+						else{
+							result.event.should.equal('Transfer');
+							balanceAfter.should.be.bignumber.equal(0);
+							res(true);
+						}
+					})
+				});
+			});
+		});
+			
 		contract('fundVesting', function () {
 			
 			it('funding vesting will succeed if performed by owner with sufficent funds and allowence', async function () {
@@ -118,8 +146,8 @@ contract('TokenVesting', function (accounts) {
 			it('funding vesting if succeed will emit Transfer event with proper sender recipient and value', async function () {
 				var allowance =  (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
 				return new Promise(async function(res,rej){
-					const { blockNumber } = await data.tokenVesting.fundVesting(allowance,{from:accounts[0]});//.should.be.rejectedWith(EVMRevert);
-					data.token.contract.Transfer({fromBlock:blockNumber},function(err,result){
+					var retValData = await data.tokenVesting.fundVesting(allowance,{from:accounts[0]});//.should.be.rejectedWith(EVMRevert);
+					data.token.contract.Transfer({fromBlock:retValData.receipt.blockNumber},function(err,result){
 						if(err!=null){
 							rej(err);
 						}
