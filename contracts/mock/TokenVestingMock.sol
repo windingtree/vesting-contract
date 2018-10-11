@@ -22,16 +22,12 @@ contract TokenVestingMock is TokenVesting {
 	
    uint256 public _now;
    
-   event NowSet(uint256 _newNow);
   
   function getNow() public view returns(uint256){
 	return _now;
   }
   
   function setNow(uint256 _n) public{
-	emit NowSet(_n);
-	emit NowSet(startTime.add(cliff));
-	emit NowSet(startTime);
 	_now=_n;
   }
   
