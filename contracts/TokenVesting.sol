@@ -44,14 +44,6 @@ contract TokenVesting is Ownable {
   }
   
    /**
-   *@dev wrapper for current time to make contract testable
-   */
-   /*
-  function getNow() public view returns(uint256){
-	return now;
-  }
-*/
-   /**
    *@dev function responsible for supplying tokens that will be vested 
    *@param _totalTokens amount of tokens that will be supplied to this contract
    */

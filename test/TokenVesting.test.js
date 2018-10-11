@@ -20,7 +20,7 @@ contract('TokenVesting', function (accounts) {
 
 		data.token = await TokenMock.new();
 		data.start = (await latestTime());
-        data.tokenVesting = await TokenVesting.new(data.token.address,accounts[1],120000,10000,10000);/* start time is default 100 seconds form now*/
+        data.tokenVesting = await TokenVesting.new(data.token.address,accounts[1],data.start+100,120000,10000,10000);/* start time is default 100 seconds form now*/
 		var amountToApprove = ((await data.token.totalSupply()).div(2)).toString();
 		var amountToTransfer = ((await data.token.totalSupply()).div(2)).toString();
 		await data.token.approve(data.tokenVesting.address,amountToApprove);
