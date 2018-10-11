@@ -35,8 +35,8 @@ contract('TokenVesting', function (accounts) {
 			});
 
 			it('claim tokens will fail if contract not funded', async function () {
-				var _now = await data.tokenVesting.getNow();
-				await data.tokenVesting.setNow(_now.add(150).toString());
+				var _now = await latestTime();
+				await increaseTimeTo(_now+150);
 				
 				await data.tokenVesting.claimTokens({from:accounts[1]}).should.be.rejectedWith(EVMRevert);;
 			});			
@@ -52,21 +52,22 @@ contract('TokenVesting', function (accounts) {
 				await data.tokenVesting.claimTokens({from:accounts[1]}).should.be.rejectedWith(EVMRevert);
 			});
 			it('claim tokens will success if called by reciver', async function () {
-				var _now = await data.tokenVesting.getNow();
-				await data.tokenVesting.setNow(_now.add(150).toString());
+				var _now = await latestTime();
+				
+				await increaseTimeTo(_now+150);
 				
 				await data.tokenVesting.claimTokens({from:accounts[1]});
 			});
 			it('claim tokens will fail if called by not reciver', async function () {
-				var _now = await data.tokenVesting.getNow();
-				await data.tokenVesting.setNow(_now.add(150).toString());
+				var _now = await latestTime();
+				await increaseTimeTo(_now+150);
 				
 				await data.tokenVesting.claimTokens({from:accounts[0]}).should.be.rejectedWith(EVMRevert);
 			});
 			
 			it('claim tokens will release amount proportional to time Passed', async function () {
-				var _now = await data.tokenVesting.getNow();
-				await data.tokenVesting.setNow(_now.add(150).toString());
+				var _now = await latestTime();
+				await increaseTimeTo(_now+150);
 				
 				const { logs } = await data.tokenVesting.claimTokens({from:accounts[1]});
 			
@@ -74,8 +75,8 @@ contract('TokenVesting', function (accounts) {
 			});
 			
 			it('claim tokens will emit tokens claimed event if succeded', async function () {
-				var _now = await data.tokenVesting.getNow();
-				await data.tokenVesting.setNow(_now.add(150).toString());
+				var _now = await latestTime();
+				await increaseTimeTo(_now+150);
 				
 				const { logs } = await data.tokenVesting.claimTokens({from:accounts[1]});
 			
