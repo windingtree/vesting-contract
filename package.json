@@ -4,7 +4,7 @@
   "description": "Token vesting contract",
   "main": "index.js",
   "scripts": {
-    "test": "scripts/test.sh",
+    "test": "truffle test",
     "testnet": "scripts/run-testnet.sh",
     "lint": "eslint test",
     "deploy-local": "./node_modules/.bin/truffle migrate",
