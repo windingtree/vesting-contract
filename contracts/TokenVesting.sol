@@ -23,6 +23,7 @@ contract TokenVesting is Ownable {
   constructor(
     address _token,
     address _receiver,
+	//I believe this two variables should be replaced with one - that is _vestingStartTime equal to _startTime.add(_cliff)
     uint256 _startTime,
     uint256 _cliff,
     uint256 _totalPeriods,
@@ -35,11 +36,15 @@ contract TokenVesting is Ownable {
     totalPeriods = _totalPeriods;
     timePerPeriod = _timePerPeriod;
   }
+  
+  function getNow() public view returns(uint256){
+	return now;
+  }
 
   function fundVesting(uint256 _totalTokens) public onlyOwner {
     require(totalTokens == 0, "Vesting already funded");
-    require(_totalTokens > 0);
-    require(token.allowance(owner, address(this)) == _totalTokens);
+    require(_totalTokens > 0); //this is redundand because of next line , if allowence is 0 then it is still ok since nothing happens
+    require(token.allowance(owner, address(this)) == _totalTokens); //this should be require(token.allowance(owner, address(this)) >= _totalTokens);
     totalTokens = _totalTokens;
     token.transferFrom(owner, address(this), totalTokens);
     emit VestingFunded(_totalTokens);
@@ -48,9 +53,9 @@ contract TokenVesting is Ownable {
   function claimTokens() public {
     require(totalTokens > 0, "Vesting has not been funded yet");
     require(msg.sender == receiver, "Only receiver can claim tokens");
-    require(now > startTime.add(cliff), "Vesting hasnt started yet");
+    require(getNow() > startTime.add(cliff), "Vesting hasnt started yet"); 
 
-    uint256 timePassed = now.sub(startTime.add(cliff));
+    uint256 timePassed = getNow().sub(startTime.add(cliff));
     uint256 tokensToClaim = totalTokens
       .div(totalPeriods)
       .mul(timePassed.div(timePerPeriod))
@@ -60,6 +65,7 @@ contract TokenVesting is Ownable {
     tokensClaimed = tokensClaimed.add(tokensToClaim);
 
     emit TokensClaimed(tokensToClaim);
+	
   }
 
   function killVesting() public onlyOwner {
