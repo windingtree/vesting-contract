@@ -45,6 +45,7 @@ contract TokenVesting is Ownable {
   
    /**
    *@dev wrapper for current time to make contract testable
+   allows to mock time in child contract
    */
   function getNow() public view returns(uint256){
 	return now;
@@ -63,7 +64,7 @@ contract TokenVesting is Ownable {
   }
 
    /**
-   *@dev function that allows receiver to claim tokens
+   *@dev function that allows receiver to claim tokens 
    */
   function claimTokens() public {
     require(totalTokens > 0, "Vesting has not been funded yet");
