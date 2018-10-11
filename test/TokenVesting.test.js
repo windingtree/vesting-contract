@@ -42,7 +42,6 @@ contract('TokenVesting', function (accounts) {
 			});			
 		});
 		contract('claimTokens', function () {
-			
 			beforeEach(async function(){
 				var allowance =  (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
 				await data.tokenVesting.fundVesting(allowance,{from:accounts[0]});//.should.be.rejectedWith(EVMRevert);

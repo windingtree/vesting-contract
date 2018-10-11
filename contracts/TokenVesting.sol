@@ -30,7 +30,6 @@ contract TokenVesting is Ownable {
   constructor(
     address _token,
     address _receiver,
-	//I believe this two variables should be replaced with one - that is _vestingStartTime equal to _startTime.add(_cliff)
     uint256 _startTime,
     uint256 _cliff,
     uint256 _totalPeriods,
@@ -45,7 +44,7 @@ contract TokenVesting is Ownable {
   }
   
    /**
-   *@dev grapper for gurrent time to make contract testable
+   *@dev wrapper for current time to make contract testable
    */
   function getNow() public view returns(uint256){
 	return now;
@@ -57,8 +56,7 @@ contract TokenVesting is Ownable {
    */
   function fundVesting(uint256 _totalTokens) public onlyOwner { // I believe this logic should be part of constructor, that would simplify other functions as well
     require(totalTokens == 0, "Vesting already funded");
-    require(_totalTokens > 0); //this is redundand because of next line , if allowence is 0 then it is still ok since nothing happens
-    require(token.allowance(owner, address(this)) == _totalTokens); //this should be require(token.allowance(owner, address(this)) >= _totalTokens);
+    require(token.allowance(owner, address(this)) == _totalTokens);
     totalTokens = _totalTokens;
     token.transferFrom(owner, address(this), totalTokens);
     emit VestingFunded(_totalTokens);
