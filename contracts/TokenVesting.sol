@@ -43,15 +43,8 @@ contract TokenVesting is Ownable {
     timePerPeriod = _timePerPeriod;
   }
   
-   /**
-   *@dev wrapper for current time to make contract testable
-   allows to mock time in child contract
-   */
-  function getNow() public view returns(uint256){
-	return now;
-  }
 
-   /**
+   /*
    *@dev function responsible for supplying tokens that will be vested 
    *@param _totalTokens amount of tokens that will be supplied to this contract
    */
@@ -66,12 +59,14 @@ contract TokenVesting is Ownable {
    /**
    *@dev function that allows receiver to claim tokens 
    */
+   
   function claimTokens() public {
+
     require(totalTokens > 0, "Vesting has not been funded yet");
     require(msg.sender == receiver, "Only receiver can claim tokens");
-    require(getNow() > startTime.add(cliff), "Vesting hasnt started yet"); 
+    require(now > startTime.add(cliff), "Vesting hasnt started yet"); 
 
-    uint256 timePassed = getNow().sub(startTime.add(cliff));
+    uint256 timePassed = now.sub(startTime.add(cliff));
     uint256 tokensToClaim = totalTokens
       .div(totalPeriods)
       .mul(timePassed.div(timePerPeriod))
