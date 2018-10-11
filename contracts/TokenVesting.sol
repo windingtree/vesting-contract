@@ -66,7 +66,9 @@ contract TokenVesting is Ownable {
    /**
    *@dev function that allows receiver to claim tokens
    */
+   
   function claimTokens() public {
+
     require(totalTokens > 0, "Vesting has not been funded yet");
     require(msg.sender == receiver, "Only receiver can claim tokens");
     require(now > startTime.add(cliff), "Vesting hasnt started yet"); 

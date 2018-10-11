@@ -1,4 +1,4 @@
-const TokenVestingMock = artifacts.require('TokenVestingMock');
+const TokenVesting = artifacts.require('TokenVesting');
 const TokenMock = artifacts.require('TokenMock');
 import { latestTime } from 'openzeppelin-solidity/test/helpers/latestTime';
 import { increaseTimeTo, duration } from 'openzeppelin-solidity/test/helpers/increaseTime';
@@ -20,7 +20,7 @@ contract('TokenVesting', function (accounts) {
 
 		data.token = await TokenMock.new();
 		data.start = (await latestTime());
-        data.tokenVesting = await TokenVestingMock.new(data.token.address,accounts[1],120,10,10);/* start time is default 100 seconds form now*/
+        data.tokenVesting = await TokenVesting.new(data.token.address,accounts[1],120000,10000,10000);/* start time is default 100 seconds form now*/
 		var amountToApprove = ((await data.token.totalSupply()).div(2)).toString();
 		var amountToTransfer = ((await data.token.totalSupply()).div(2)).toString();
 		await data.token.approve(data.tokenVesting.address,amountToApprove);
@@ -34,50 +34,52 @@ contract('TokenVesting', function (accounts) {
 			beforeEach(async function(){
 				var allowance =  (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
 			});
-
+			
 			it('claim tokens will fail if contract not funded', async function () {
 				var _now = await latestTime();
-				await increaseTimeTo(_now+150);
+				await increaseTimeTo(_now+150000);
 				
 				await data.tokenVesting.claimTokens({from:accounts[1]}).should.be.rejectedWith(EVMRevert);;
-			});			
+			});		
+			
 		});
 		contract('claimTokens', function () {
 			beforeEach(async function(){
 				var allowance =  (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
-				await data.tokenVesting.fundVesting(allowance,{from:accounts[0]});//.should.be.rejectedWith(EVMRevert);
+				await data.tokenVesting.fundVesting(allowance,{from:accounts[0]});
 			});
-			
 			it('claim tokens will fail if called before start time', async function () {
 				
 				await data.tokenVesting.claimTokens({from:accounts[1]}).should.be.rejectedWith(EVMRevert);
 			});
 			it('claim tokens will success if called by reciver', async function () {
 				var _now = await latestTime();
+				console.log(_now);
 				
-				await increaseTimeTo(_now+150);
+				await increaseTimeTo(_now+150000);
 				
 				await data.tokenVesting.claimTokens({from:accounts[1]});
 			});
+			
 			it('claim tokens will fail if called by not reciver', async function () {
 				var _now = await latestTime();
-				await increaseTimeTo(_now+150);
+				await increaseTimeTo(_now+150000);
 				
 				await data.tokenVesting.claimTokens({from:accounts[0]}).should.be.rejectedWith(EVMRevert);
 			});
 			
 			it('claim tokens will release amount proportional to time Passed', async function () {
 				var _now = await latestTime();
-				await increaseTimeTo(_now+150);
+				await increaseTimeTo(_now+250000);
 				
 				const { logs } = await data.tokenVesting.claimTokens({from:accounts[1]});
 			
-				logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(15000)); /* 3 periods 5000 each */
+				logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(60)); // 6 periods 10 each 
 			});
 			
 			it('claim tokens will emit tokens claimed event if succeded', async function () {
 				var _now = await latestTime();
-				await increaseTimeTo(_now+150);
+				await increaseTimeTo(_now+150000);
 				
 				const { logs } = await data.tokenVesting.claimTokens({from:accounts[1]});
 			
@@ -161,7 +163,7 @@ contract('TokenVesting', function (accounts) {
 					})
 				});
 			});
-
+			
 		});
 
 

@@ -17,7 +17,7 @@ contract TokenVestingMock is TokenVesting {
     _cliff,
     _totalPeriods,
     _timePerPeriod) {
-		setNow(now+100);
+		setNow(now+100000);
 	}
 	
    uint256 public _now;
