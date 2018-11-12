@@ -45,7 +45,6 @@ contract TokenVesting is Ownable {
     timePerPeriod = _timePerPeriod;
   }
 
-
    /*
    *@dev function responsible for supplying tokens that will be vested
    *@param _totalTokens amount of tokens that will be supplied to this contract
