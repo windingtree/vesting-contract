@@ -13,12 +13,6 @@ cleanup() {
   fi
 }
 
-if [ "$SOLIDITY_COVERAGE" = true ]; then
-  testrpc_port=8555
-else
-  testrpc_port=8545
-fi
-
 testrpc_running() {
   nc -z localhost "$testrpc_port"
 }
@@ -39,11 +33,8 @@ start_testrpc() {
     --account="0x35b5042e809eab0db3252bad02b67436f64453072128ee91c1d4605de70b27c1,10000000000000000000000000000000000000000000000000000000000000000000000000000000"
   )
 
-  if [ "$SOLIDITY_COVERAGE" = true ]; then
-    node_modules/.bin/testrpc-sc --gasLimit 0xfffffffffff --port "$testrpc_port" "${accounts[@]}" > /dev/null &
-  else
-    node_modules/.bin/ganache-cli  --gasLimit 0xfffffffffff "${accounts[@]}" > /dev/null &
-  fi
+
+  node_modules/.bin/ganache-cli  --gasLimit 0xfffffffffff "${accounts[@]}" > /dev/null &
 
   testrpc_pid=$!
 }
@@ -57,10 +48,6 @@ fi
 
 if [ "$SOLIDITY_COVERAGE" = true ]; then
   node_modules/.bin/solidity-coverage
-
-  if [ "$CONTINUOUS_INTEGRATION" = true ]; then
-    cat coverage/lcov.info | node_modules/.bin/coveralls
-  fi
 else
   node_modules/.bin/truffle test "$@"
 fi

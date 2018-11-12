@@ -20,13 +20,15 @@ contract TokenVesting is Ownable {
   event TokensClaimed(uint256 tokensClaimed);
   event VestingKilled();
 
-   /**
-   *@dev contract contructor
-   *@param _token address of erc20 token
-   *@param _receiver address entitle to claim tokens
-   *@param _startTime moment when counting time starts
-   *@param _cliff delay from _startTime after which vesting starts
-   */
+  /**
+  *@dev contructor
+  *@param _token address of erc20 token
+  *@param _receiver address entitle to claim tokens
+  *@param _startTime moment when counting time starts
+  *@param _cliff delay from _startTime after which vesting starts
+  *@param _totalPeriods total amount of vesting periods
+  *@param _timePerPeriod time in seconds for every vesting period
+  */
   constructor(
     address _token,
     address _receiver,
@@ -42,10 +44,10 @@ contract TokenVesting is Ownable {
     totalPeriods = _totalPeriods;
     timePerPeriod = _timePerPeriod;
   }
-  
+
 
    /*
-   *@dev function responsible for supplying tokens that will be vested 
+   *@dev function responsible for supplying tokens that will be vested
    *@param _totalTokens amount of tokens that will be supplied to this contract
    */
   function fundVesting(uint256 _totalTokens) public onlyOwner { // I believe this logic should be part of constructor, that would simplify other functions as well
@@ -56,15 +58,15 @@ contract TokenVesting is Ownable {
     emit VestingFunded(_totalTokens);
   }
 
-   /**
-   *@dev function that allows receiver to claim tokens 
-   */
-   
+  /**
+  *@dev function that allows receiver to claim tokens, can be called only by
+    receiver
+  */
   function claimTokens() public {
 
     require(totalTokens > 0, "Vesting has not been funded yet");
     require(msg.sender == receiver, "Only receiver can claim tokens");
-    require(now > startTime.add(cliff), "Vesting hasnt started yet"); 
+    require(now > startTime.add(cliff), "Vesting hasnt started yet");
 
     uint256 timePassed = now.sub(startTime.add(cliff));
     uint256 tokensToClaim = totalTokens
@@ -76,12 +78,12 @@ contract TokenVesting is Ownable {
     tokensClaimed = tokensClaimed.add(tokensToClaim);
 
     emit TokensClaimed(tokensToClaim);
-	
+
   }
 
-   /**
-   *@dev function that allows cancel vesting
-   */
+  /**
+  *@dev function that allows cancel vesting, can be called only by the owner
+  */
   function killVesting() public onlyOwner {
     token.transfer(owner, totalTokens.sub(tokensClaimed));
     tokensClaimed = totalTokens;
