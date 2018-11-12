@@ -1,3 +1,5 @@
 node_modules
 keys.json
 build
+coverage
+coverage.json
