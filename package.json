@@ -8,17 +8,14 @@
     "testnet": "scripts/run-testnet.sh",
     "lint": "eslint test",
     "coverage": "SOLIDITY_COVERAGE=true scripts/test.sh",
-    "deploy-local": "./node_modules/.bin/truffle migrate",
-    "deploy-mainnet": "./node_modules/.bin/truffle migrate --network mainnet --reset",
-    "deploy-ropsten": "./node_modules/.bin/truffle migrate --network ropsten --reset",
-    "contract-flattener": "node_modules/.bin/truffle-flattener contracts/BookingPoC.sol > build/BookingPocFlattened.sol"
+    "contract-flattener": "node_modules/.bin/truffle-flattener contracts/TokenVesting.sol > contracts/TokenVestingFlattened.sol"
   },
   "author": "Augusto Lemble <augusto@windingtree.com>",
   "license": "ISC",
   "dependencies": {
     "ethereumjs-abi": "^0.6.5",
     "openzeppelin-solidity": "^1.12.0",
-    "truffle-flattener": "^1.2.6",
+    "truffle-flattener": "^1.2.9",
     "truffle-hdwallet-provider": "0.0.6",
     "web3": "^1.0.0-beta.35"
   },
