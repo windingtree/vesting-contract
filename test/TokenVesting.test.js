@@ -16,14 +16,15 @@ contract('TokenVesting', function (accounts) {
   const data = {};
 
   beforeEach(async function () {
-    data.token = await TokenMock.new();
-    data.start = (await latestTime());
-    data.tokenVesting = await TokenVesting.new(data.token.address, accounts[1], data.start + 100, 120000, 10000, 10000);/* start time is default 100 seconds form now */
-    const amountToApprove = ((await data.token.totalSupply()).div(2)).toString();
-    const amountToTransfer = ((await data.token.totalSupply()).div(2)).toString();
+    data.token = await TokenMock.new(100);
+    data.start = (await latestTime()) + duration.days(1);
+    /* start time is default 100 seconds form now */
+    /* Vesting of 10 periods of 30 days with 30 days cliff */
+    data.tokenVesting = await TokenVesting.new(
+      data.token.address, accounts[1], data.start, duration.days(30), 10, duration.days(30)
+    );
+    const amountToApprove = 100;
     await data.token.approve(data.tokenVesting.address, amountToApprove);
-    await data.token.approve(data.tokenVesting.address, amountToApprove, { from: accounts[1] });
-    await data.token.transfer(accounts[1], amountToTransfer);
     const _owner = (await data.tokenVesting.owner()).toString();
   });
 
@@ -33,8 +34,7 @@ contract('TokenVesting', function (accounts) {
     });
 
     it('claim tokens will fail if contract not funded', async function () {
-      const _now = await latestTime();
-      await increaseTimeTo(_now + 150000);
+      await increaseTimeTo(data.start + 1);
 
       await data.tokenVesting.claimTokens({ from: accounts[1] }).should.be.rejectedWith(EVMRevert); ;
     });
@@ -42,48 +42,49 @@ contract('TokenVesting', function (accounts) {
   contract('claimTokens', function () {
     beforeEach(async function () {
       const allowance = (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
-      await data.tokenVesting.fundVesting(allowance, { from: accounts[0] });
+      await data.tokenVesting.fundVesting(allowance);
     });
     it('claim tokens will fail if called before start time', async function () {
       await data.tokenVesting.claimTokens({ from: accounts[1] }).should.be.rejectedWith(EVMRevert);
     });
     it('claim tokens will success if called by reciver', async function () {
-      const _now = await latestTime();
-
-      await increaseTimeTo(_now + 150000);
-
+      await increaseTimeTo(data.start + duration.days(30) + 1);
       await data.tokenVesting.claimTokens({ from: accounts[1] });
     });
 
     it('claim tokens will fail if called by not reciver', async function () {
-      const _now = await latestTime();
-      await increaseTimeTo(_now + 150000);
-
-      await data.tokenVesting.claimTokens({ from: accounts[0] }).should.be.rejectedWith(EVMRevert);
+      await increaseTimeTo(data.start + duration.days(30) + 1);
+      await data.tokenVesting.claimTokens({ from: accounts[2] }).should.be.rejectedWith(EVMRevert);
     });
 
     it('claim tokens will release amount proportional to time Passed', async function () {
-      const _now = await latestTime();
-      await increaseTimeTo(_now + 250000);
+      await increaseTimeTo(data.start + duration.days(30)*3 + 1);
+      (await data.tokenVesting.claimTokens({ from: accounts[1] }))
+        .logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(20)); // 2 periods
 
-      const { logs } = await data.tokenVesting.claimTokens({ from: accounts[1] });
+      await increaseTimeTo(data.start + duration.days(30)*9 + 1);
+      (await data.tokenVesting.claimTokens({ from: accounts[1] }))
+        .logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(60)); // 8 periods
 
-      logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(60)); // 6 periods 10 each
+      await increaseTimeTo(data.start + duration.days(30)*11 + 1);
+      (await data.tokenVesting.claimTokens({ from: accounts[1] }))
+        .logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(20)); // 10 periods
+
+      (await data.token.balanceOf(accounts[1])).should.be.bignumber.equal(new BigNumber(100));
     });
 
     it('claim tokens will emit tokens claimed event if succeded', async function () {
-      const _now = await latestTime();
-      await increaseTimeTo(_now + 150000);
+      await increaseTimeTo(data.start + duration.days(30)*11 + 1);
+      (await data.tokenVesting.claimTokens({ from: accounts[1] }))
+        .logs[0].event.should.equal('TokensClaimed');
 
-      const { logs } = await data.tokenVesting.claimTokens({ from: accounts[1] });
-
-      logs[0].event.should.equal('TokensClaimed');
+      (await data.token.balanceOf(accounts[1])).should.be.bignumber.equal(new BigNumber(100));
     });
   });
 
   contract('killVesting', function () {
     it('kill vesting will succeed if performed by owner', async function () {
-      await data.tokenVesting.killVesting({ from: accounts[0] });// .should.be.rejectedWith(EVMRevert);
+      await data.tokenVesting.killVesting({ from: accounts[0] });
     });
 
     it('kill vesting will fail if performed by not owner', async function () {
@@ -110,7 +111,7 @@ contract('TokenVesting', function (accounts) {
   contract('fundVesting', function () {
     it('funding vesting will succeed if performed by owner with sufficent funds and allowence', async function () {
       const allowance = (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
-      await data.tokenVesting.fundVesting(allowance, { from: accounts[0] });// .should.be.rejectedWith(EVMRevert);
+      await data.tokenVesting.fundVesting(allowance);
     });
 
     it('funding vesting will fail if performed by not owner', async function () {
@@ -120,19 +121,18 @@ contract('TokenVesting', function (accounts) {
 
     it('funding vesting for amount different than allowence will fail', async function () {
       const allowance = (await data.token.allowance(accounts[0], data.tokenVesting.address)).sub(1).toString();
-      await data.tokenVesting.fundVesting(allowance, { from: accounts[0] }).should.be.rejectedWith(EVMRevert);
+      await data.tokenVesting.fundVesting(allowance).should.be.rejectedWith(EVMRevert);
     });
 
     it('funding vesting will fail if performed by owner without proper balance', async function () {
-      const amountToApprove = (await data.token.totalSupply()).toString();
-      await data.token.approve(data.tokenVesting.address, amountToApprove);
+      await data.token.approve(data.tokenVesting.address, 110);
       const allowance = (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
-      await data.tokenVesting.fundVesting(allowance, { from: accounts[0] }).should.be.rejectedWith(EVMRevert);
+      await data.tokenVesting.fundVesting(allowance).should.be.rejectedWith(EVMRevert);
     });
 
     it('funding vesting if succeed will emit VestingFunded event with proper amount', async function () {
       const allowance = (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
-      const { logs } = await data.tokenVesting.fundVesting(allowance, { from: accounts[0] });// .should.be.rejectedWith(EVMRevert);
+      const { logs } = await data.tokenVesting.fundVesting(allowance);
       logs[0].event.should.equal('VestingFunded');
       logs[0].args.totalTokens.should.be.bignumber.equal(allowance);
     });
@@ -140,7 +140,7 @@ contract('TokenVesting', function (accounts) {
     it('funding vesting if succeed will emit Transfer event with proper sender recipient and value', async function () {
       const allowance = (await data.token.allowance(accounts[0], data.tokenVesting.address)).toString();
       return new Promise(async function (resolve, reject) {
-        const retValData = await data.tokenVesting.fundVesting(allowance, { from: accounts[0] });// .should.be.rejectedWith(EVMRevert);
+        const retValData = await data.tokenVesting.fundVesting(allowance);
         data.token.contract.Transfer({ fromBlock: retValData.receipt.blockNumber }, function (err, result) {
           if (err != null) {
             reject(err);
