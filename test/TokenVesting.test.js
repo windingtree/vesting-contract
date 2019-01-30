@@ -57,7 +57,7 @@ contract('TokenVesting', function (accounts) {
       await data.tokenVesting.claimTokens({ from: accounts[2] }).should.be.rejectedWith(EVMRevert);
     });
 
-    it('claim tokens will release amount proportional to time Passed', async function () {
+    it('claim tokens will release amount proportional to time passed', async function () {
       await increaseTimeTo(data.start + duration.days(30)*3 + 1);
       (await data.tokenVesting.claimTokens({ from: accounts[1] }))
         .logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(20)); // 2 periods
@@ -71,6 +71,25 @@ contract('TokenVesting', function (accounts) {
         .logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(20)); // 10 periods
 
       (await data.token.balanceOf(accounts[1])).should.be.bignumber.equal(new BigNumber(100));
+    });
+
+    it('claim tokens will release amount to a new receiver', async function () {
+      await increaseTimeTo(data.start + duration.days(30)*3 + 1);
+      (await data.tokenVesting.claimTokens({ from: accounts[1] }))
+        .logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(20)); // 2 periods
+
+      await data.tokenVesting.changeReceiver(accounts[3]);
+
+      await increaseTimeTo(data.start + duration.days(30)*9 + 1);
+      (await data.tokenVesting.claimTokens({ from: accounts[3] }))
+        .logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(60)); // 8 periods
+
+      await increaseTimeTo(data.start + duration.days(30)*11 + 1);
+      (await data.tokenVesting.claimTokens({ from: accounts[3] }))
+        .logs[0].args.tokensClaimed.should.be.bignumber.equal(new BigNumber(20)); // 10 periods
+
+      (await data.token.balanceOf(accounts[1])).should.be.bignumber.equal(new BigNumber(20));
+      (await data.token.balanceOf(accounts[3])).should.be.bignumber.equal(new BigNumber(80));
     });
 
     it('claim tokens will emit tokens claimed event if succeded', async function () {
