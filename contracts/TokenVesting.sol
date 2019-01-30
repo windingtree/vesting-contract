@@ -45,16 +45,25 @@ contract TokenVesting is Ownable {
     timePerPeriod = _timePerPeriod;
   }
 
-   /*
-   *@dev function responsible for supplying tokens that will be vested
-   *@param _totalTokens amount of tokens that will be supplied to this contract
-   */
-  function fundVesting(uint256 _totalTokens) public onlyOwner { // I believe this logic should be part of constructor, that would simplify other functions as well
+  /*
+  *@dev function responsible for supplying tokens that will be vested
+  *@param _totalTokens amount of tokens that will be supplied to this contract
+  */
+  function fundVesting(uint256 _totalTokens) public onlyOwner {
     require(totalTokens == 0, "Vesting already funded");
     require(token.allowance(owner, address(this)) == _totalTokens);
     totalTokens = _totalTokens;
     token.transferFrom(owner, address(this), totalTokens);
     emit VestingFunded(_totalTokens);
+  }
+
+  /*
+  *@dev Function that allows the contract owner to change tokens receiver
+  *@param newReceiver the new receiver address
+  */
+  function changeReceiver(address newReceiver) public onlyOwner {
+    require(newReceiver != address(0));
+    receiver = newReceiver;
   }
 
   /**
